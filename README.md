@@ -7,7 +7,7 @@ This repository is designed for individuals using the MITLL RACECAR-MN, an educa
 Alexander Jiang, Steven Lei, Stephen Snekvik, Austin Huang & David Romero
 
 
-**Special thanks to the instructors: **
+**Special thanks to the instructors:**
 
 Alina Saratova, Kourush Arasteh, Julia Hsing, Dylan Camacho, Nic Tekieli, and Alec Candidato
 
