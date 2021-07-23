@@ -9,11 +9,5 @@ Alexander Jiang, Steven Lei, Stephen Snekvik, Austin Huang & David Romero
 
 **Special thanks to the instructors: **
 
-Alina Saratova
-Kourush Arasteh
-
-Julia Hsing
-Dylan Camacho
-Nic Tekieli
-Alec Candidato
+Alina Saratova, Kourush Arasteh, Julia Hsing, Dylan Camacho, Nic Tekieli, and Alec Candidato
 
