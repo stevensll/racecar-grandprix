@@ -1,6 +1,4 @@
 ### BWSI 2021 Grandprix Team CocaCola
-#newtest
-### BWSI 2021 Grandprix Team CocaCola
 import sys
 from typing import Tuple
 import cv2 as cv
@@ -11,9 +9,10 @@ sys.path.insert(0, "../../library")
 import racecar_core
 import racecar_utils as rc_utils
 from enum import IntEnum
+import custom_funcs as rc_cf
+
 
 rc = racecar_core.create_racecar()
-
 class State(IntEnum) :
     challenge1 = 1
     challenge2 = 2
@@ -23,6 +22,7 @@ def start():
     print("Team Cocacola Grand Prix Challenge!")
 
 def update():
+    rc_cf.update_contours()
 
 
 
