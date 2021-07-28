@@ -35,7 +35,7 @@ angle = 0.0  # The current angle of the car's wheels
 contour_center = None  # The (pixel row, pixel column) of contour
 contour_area = 0  # The area of contour
 
-
+#comment
 def start():
     rc.drive.stop()
     print("Team Cocacola Grand Prix Challenge!")
