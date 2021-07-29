@@ -60,31 +60,26 @@ def update():
     image = rc.camera.get_color_image()
 
     color = PURPLE  
-    turn_priority = "PURPLE"
+    turn_priority = "ORANGE"
     
     cropped_image = rc_utils.crop(image, CROP_FLOOR[0], CROP_FLOOR[1])
 
     purple_contours = rc_utils.find_contours(cropped_image, PURPLE[0], PURPLE[1])
     orange_contours = rc_utils.find_contours(cropped_image, ORANGE[0], ORANGE[1])
     
-    # if purple_contours:
-    #     purple_area = rc_utils.get_contour_area(rc_utils.get_largest_contour(purple_contours, MIN_CONTOUR_AREA))
-    # else: 
-    #     purple_area = 0
-    
-    # if orange_contours:
-    #     orange_area = rc_utils.get_contour_area(rc_utils.get_largest_contour(orange_contours, MIN_CONTOUR_AREA))
-    # else:
-    #     orange_area = 0
+
 
     if turn_priority == "PURPLE":
         if purple_contours: 
-            print("purple")
-            rc_utils.draw_contour(cropped_image, purple_contours[0])
             color = PURPLE
         else: 
             color = ORANGE
 
+    elif turn_priority == "ORANGE":
+        if orange_contours: 
+            color = ORANGE
+        else: 
+            color = PURPLE
 
 
 
@@ -92,14 +87,13 @@ def update():
     
 
 
-    if contours is not None:
-        print(len(contours))
+    if contours:
         if len(contours) >= 1:
-            if contours[0] is not None and contours[0][1] is not None:
+            if contours[0] and contours[0][1]:
                 right_center = contours[0][1]
 
         if len(contours) == 2:
-            if contours [1] is not None and contours[1][1] is not None:
+            if contours [1] and contours[1][1]:
                 left_center = contours[1][1]
                 
     center = [(right_center[0] + left_center[0]) // 2, (right_center[1] + left_center[1])//2]
@@ -114,16 +108,26 @@ def update():
 
     
     
-    
-    
     lt = rc.controller.Trigger.LEFT
     rt = rc.controller.Trigger.RIGHT
     
     speed = rc.controller.get_trigger(rt)-rc.controller.get_trigger(lt)
     angle = rc.controller.get_joystick(rc.controller.Joystick.LEFT)[0]
     
-    speed = 0.5
+    speed = 0.85
+
     angle = rc_utils.remap_range(center[1],0,rc.camera.get_width(),-1,1,True)
+   
+    if turn_priority == "PURPLE" and color == PURPLE:
+        speed = 0.5
+        if angle > 0.25: angle = 1
+        elif angle < -0.15: angle = -1
+
+    elif turn_priority == "ORANGE" and color == ORANGE:
+        speed = 0.5
+        if angle > 0.25: angle = 1
+        elif angle < -0.15: angle = -1
+
 
     rc.drive.set_speed_angle(speed, angle)
     if rc.controller.is_down(rc.controller.Button.B):
