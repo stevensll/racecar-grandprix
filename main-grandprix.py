@@ -52,6 +52,19 @@ def start():
     rc.drive.stop()
     print("Team Cocacola Grand Prix Challenge!")
 
+def challenge9():
+    global counter
+    global speed
+    global angle
+
+
+    speed = 1
+    if counter > 5:
+        angle = 0.15
+    counter+=rc.get_delta_time()
+
+    if counter > 9:
+        angle = 0
 
 
 def challenge2(path_color):
@@ -135,8 +148,8 @@ def update():
     speed = rc.controller.get_trigger(rt)-rc.controller.get_trigger(lt)
     angle = rc.controller.get_joystick(rc.controller.Joystick.LEFT)[0]
     
-    challenge2(ORANGE)
-
+    challenge2(PURPLE)
+    # rc.drive.set_max_speed(0.75)
     rc.drive.set_speed_angle(speed, angle)
 
     if rc.controller.is_down(rc.controller.Button.B):
