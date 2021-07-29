@@ -126,15 +126,16 @@ def update():
         marker.detect_colors(color_image, [BLUE, RED, GREEN])
         color = marker.get_color()
         orientation = marker.get_orientation()
-        orientation = str(orientation)
         marker_top, marker_left = marker.get_corners()[marker.get_orientation().value]
         marker_bottom, marker_right = marker.get_corners()[(marker.get_orientation().value + 2) % 4]
         ar_center = ( marker_top + (marker_bottom-marker_top)//2, marker_left + (marker_right-marker_left)//2)
         ar_dis = depth_image[ar_center]
         if id is not None:
             print(id)
-            print(ar_center)
+            #print(ar_center)
             print(ar_dis)
+            #print(color)
+            #print(orientation)
             if id == 0 and ar_dis < 60:
                 robotState = State.challenge1
                 timer = 0
@@ -142,7 +143,7 @@ def update():
                 robotState = State.challenge4
                 ar_color = color
                 timer = 0
-            elif id == 2 and ar_dis < 60:
+            elif id == 199 and ar_dis < 200:
                 robotState = State.challenge3
                 timer = 0
 
@@ -154,17 +155,16 @@ def green_line_follow():
     global contour_center,contour_area,angle,speed, color_image, image, green_contours
 
     if contour_center is not None:
-        error = contour_center[1] - rc.camera.get_width() / 2
-        angle = 2 * error/rc.camera.get_width()
+        #error = contour_center[1] - rc.camera.get_width() / 2
+        #angle = 2 * error/rc.camera.get_width()
+
+        angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
 
         max_speed = 1.0
         min_speed = 0.6
         speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
 
-        if speed >1:
-            speed = 1
-        elif speed < -1:
-            speed = -1
+        speed = rc_utils.clamp(speed, -1, 1)
 
 def challenge1():
     global scan, green_contours, image, robotState, marker, speed, angle, timer, contour_area, contour_center
@@ -190,12 +190,13 @@ def challenge1():
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
 
-#def challenge2():
+def challenge2():
+    
 
 def challenge3():
     global speed
     global angle
-    global cur_state, FRONT_LEFT_WINDOW, FRONT_RIGHT_WINDOW, depth_image, color_image
+    global cur_state, FRONT_LEFT_WINDOW, FRONT_RIGHT_WINDOW, depth_image, color_image,robotState, timer, contour_center
 
     
 
