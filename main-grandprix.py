@@ -25,38 +25,16 @@ class State(IntEnum) :
     challenge5 = 5
     challenge6 = 6
     challenge7 = 7
-    challenge8 =8
+    challenge8 = 8
 
 robotState = State.green_line_follow
 
 
 #VARIABLES GO HERE
 
-<<<<<<< HEAD
 #Variables for green line follow
-=======
-
-########################################################################################
-# CONSTANTS
-########################################################################################
-
-
-# Color HSV
-CROP_FLOOR = ((300, 0), (rc.camera.get_height(), rc.camera.get_width()))
-
-BLUE = ((90, 200, 200), (120, 255, 255), "blue")  
-GREEN = ((40,50,50), (80,255,255), "green")
-RED = ((170,50,50), (10,255,255), "red")
-ORANGE = ((15,230,230), (35,255,255,),"orange")
-PURPLE = ((125,200,200),(140,255,255), "purple")
-
-
-RIGHT_WINDOW = (32,38)
-LEFT_WINDOW = (322,328)
->>>>>>> lineFollower
 timer = 0.0
 MIN_CONTOUR_AREA = 30
-<<<<<<< HEAD
 # A crop window for the floor directly in front of the car
 CROP_FLOOR = ((360, 0), (rc.camera.get_height(), rc.camera.get_width()))
 BLUE = ((90, 50, 50), (120, 255, 255), "blue")  # The HSV range for the color blue
@@ -90,28 +68,24 @@ cur_state = Challenge3State.search
 #Challenge 4
 ar_color = None
 
+#Challenge 6
+FRONT_WINDOW_6 = (-20, 20)
+detected_obstacle_time = 0.0
+detected_obstacle = False
+forward_dist = None
+
 #Drive Function
 speed = 0.0  # The current speed of the car
 angle = 0.0  # The current angle of the car's wheels
-=======
-
-speed = 0.0  # The current speed of the car
-angle = 0.0  # The current angle of the car's wheels
-
-right_center = [0,0]
-left_center = [0,0]
-counter = 0
->>>>>>> lineFollower
 
 def start():
     global robotState
-    rc.drive.set_max_speed()
+    rc.drive.set_max_speed(0.5)
     rc.drive.stop()
     robotState = State.green_line_follow
 
     print("Team Cocacola Grand Prix Challenge!")
 
-<<<<<<< HEAD
 def update():
     global speed, angle, robotState, scan, color_image, timer, depth_image, marker, contour_center, contour_area, ar_color
     timer += rc.get_delta_time()
@@ -152,6 +126,8 @@ def update():
         challenge4(ar_color)
     elif robotState == State.challenge3:
         challenge3()
+    elif robotState == State.challenge6:
+        challenge6()
 
     for marker in markers:
         id = marker.get_id()
@@ -178,10 +154,15 @@ def update():
             elif id == 199 and ar_dis < 200:
                 robotState = State.challenge3
                 timer = 0
-
-    print(robotState)
+            elif id == 5 and ar_dis < 60:
+                robotState = State.challenge6
+                timer = 0
+    print(forward_dist)
     rc.drive.set_speed_angle(speed, angle)
 
+def update_slow():
+    global robotState
+    print(robotState)
 
 def green_line_follow():
     global contour_center,contour_area,angle,speed, color_image, image, green_contours
@@ -192,11 +173,11 @@ def green_line_follow():
 
         angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
 
-        max_speed = 1.0
-        min_speed = 0.6
+        max_speed = 0.6
+        min_speed = 0.3
         speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
 
-        speed = rc_utils.clamp(speed, -1, 1)
+        speed = rc_utils.clamp(speed, -0.5, 0.6)
 
 def challenge1():
     global scan, green_contours, image, robotState, marker, speed, angle, timer, contour_area, contour_center
@@ -213,17 +194,16 @@ def challenge1():
 
     angle = rc_utils.clamp(angle, -1, 1)
 
-    max_speed = 1.0
-    min_speed = 0.9
+    max_speed = 0.6
+    min_speed = 0.4
     speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
 
-    speed = rc_utils.clamp(speed, -1, 1)
+    speed = rc_utils.clamp(speed, -0.5, 0.6)
 
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
 
-def challenge2():
-    
+#def challenge2():
 
 def challenge3():
     global speed
@@ -276,7 +256,7 @@ def challenge3():
 def challenge4(ar_color):
     global speed, angle, timer, scan, contour_center, robotState
     _, front_dis = rc_utils.get_lidar_closest_point(scan, (-10, 10))
-    speed = 1
+    speed = 0.5
     angle = 0
     print(front_dis)
     print(ar_color)
@@ -285,7 +265,7 @@ def challenge4(ar_color):
         speed = 0
         angle = 0
     elif ar_color == "blue" and front_dis > 40:
-        speed = 1
+        speed = 0.5
         angle = 0
     elif ar_color == "blue" and front_dis < 40:
         speed = 0
@@ -293,115 +273,30 @@ def challenge4(ar_color):
     
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
-=======
-def challenge9():
-    global counter
-    global speed
-    global angle
 
-
+def challenge6():
+    global speed, angle, timer, detected_obstacle, detected_obstacle_time, scan, FRONT_WINDOW, forward_dist
+    forward_dist = rc_utils.get_lidar_average_distance(scan, 0.0, 30.0)
+    print(forward_dist)
+    angle = 0
     speed = 1
-    if counter > 5:
-        angle = 0.15
-    counter+=rc.get_delta_time()
 
-    if counter > 9:
-        angle = 0
-
-
-def challenge2(path_color):
-    global speed
-    global angle
-    global right_center
-    global left_center
-    global PURPLE
-    global ORANGE
-    global CROP_FLOOR
-    global counter
-
-
-    image = rc.camera.get_color_image()
-    cropped_image = rc_utils.crop(image, CROP_FLOOR[0], CROP_FLOOR[1])
-
-    purple_contours = rc_utils.find_contours(cropped_image, PURPLE[0], PURPLE[1])
-    orange_contours = rc_utils.find_contours(cropped_image, ORANGE[0], ORANGE[1])
-    
-    color = [[],[]]
-
-    if path_color == PURPLE:
-        if orange_contours:
-            color = ORANGE
-        else: 
-            color = PURPLE
->>>>>>> lineFollower
-
-    elif path_color == ORANGE:
-        if purple_contours:
-            color = PURPLE
+    if speed > 0 and forward_dist < 160:
+        if not detected_obstacle:
+            detected_obstacle = True
+            detected_obstacle_time = timer
+        if timer - detected_obstacle_time < 0.5:
+            speed = -1
         else:
-            color = ORANGE
-    
-    contours = rc_cf.get_n_contour_info(2,image,color[0],color[1], CROP_FLOOR)
-    if contours:
-        if len(contours) >= 1:
-            if contours[0] and contours[0][1]:
-                right_center = contours[0][1]
-
-        if len(contours) == 2:
-            if contours [1] and contours[1][1]:
-                left_center = contours[1][1]
-
-    center = [(right_center[0] + left_center[0]) // 2, (right_center[1] + left_center[1])//2]
-
-    speed = 1
-    angle = rc_utils.remap_range(center[1],0,rc.camera.get_width(),-1,1,True)
-
-    if color is not path_color:
-        angle = 0.25
+            speed = 0
+    elif forward_dist > 160:
         speed = 1
-        counter+=rc.get_delta_time()
-        if counter > 1.55:
-            angle = 1
-        if counter > 2.5:
-            angle = 0
-        if counter > 3:
-            angle = -1
-        if counter > 3.75:
-            angle = 0
-        
+        detected_obstacle = False
+        detected_obstacle_time = 0.0
 
     
-    rc_utils.draw_circle(cropped_image, left_center)
-    rc_utils.draw_circle(cropped_image, right_center)
-    rc_utils.draw_circle(cropped_image, center)
-    rc.display.show_color_image(cropped_image)
 
 
-def update():
-    global speed
-    global angle
-    global right_center
-    global left_center
-    global ORANGE
-    global PURPLE
-    global counter
-
-    lt = rc.controller.Trigger.LEFT
-    rt = rc.controller.Trigger.RIGHT
-    speed = rc.controller.get_trigger(rt)-rc.controller.get_trigger(lt)
-    angle = rc.controller.get_joystick(rc.controller.Joystick.LEFT)[0]
-    
-    challenge2(PURPLE)
-    # rc.drive.set_max_speed(0.75)
-    rc.drive.set_speed_angle(speed, angle)
-
-    if rc.controller.is_down(rc.controller.Button.B):
-        print(f"Speed: {speed} Angle: {angle} Counter: {counter}")
-        # if green_center is None:
-        #     print("No green contour found")
-        # else:
-        #     print(green_center, speed)
-    
 if __name__ == "__main__":
-    rc.set_start_update(start, update, None)
+    rc.set_start_update(start, update, update_slow)
     rc.go()
