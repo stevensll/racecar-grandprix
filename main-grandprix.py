@@ -51,6 +51,22 @@ marker = None
 
 #Challenge 2
 
+#Challenge 3
+FRONT_WINDOW = (-10, 10)
+FRONT_RIGHT_WINDOW = (30, 40)
+FRONT_LEFT_WINDOW = (320, 330)
+RIGHT_WINDOW = (65, 70)
+LEFT_WINDOW = (285, 290)
+
+class Challenge3State(IntEnum):
+        see_marker = 0
+        follow_marker = 1
+        search = 2
+
+cur_state = Challenge3State.search
+
+#Challenge 4
+ar_color = None
 
 #Drive Function
 speed = 0.0  # The current speed of the car
@@ -65,7 +81,7 @@ def start():
     print("Team Cocacola Grand Prix Challenge!")
 
 def update():
-    global speed, angle, robotState, scan, color_image, timer, depth_image, marker, contour_center, contour_area
+    global speed, angle, robotState, scan, color_image, timer, depth_image, marker, contour_center, contour_area, ar_color
     timer += rc.get_delta_time()
     color_image = rc.camera.get_color_image()
     depth_image = rc.camera.get_depth_image()
@@ -100,8 +116,10 @@ def update():
         green_line_follow()
     if robotState == State.challenge1:
         challenge1() 
-    
-
+    elif robotState == State.challenge4:
+        challenge4(ar_color)
+    elif robotState == State.challenge3:
+        challenge3()
 
     for marker in markers:
         id = marker.get_id()
@@ -119,6 +137,13 @@ def update():
             print(ar_dis)
             if id == 0 and ar_dis < 60:
                 robotState = State.challenge1
+                timer = 0
+            elif id == 3 and ar_dis < 300:
+                robotState = State.challenge4
+                ar_color = color
+                timer = 0
+            elif id == 2 and ar_dis < 60:
+                robotState = State.challenge3
                 timer = 0
 
     print(robotState)
@@ -162,6 +187,77 @@ def challenge1():
 
     speed = rc_utils.clamp(speed, -1, 1)
 
+    if contour_center is not None and timer > 5.0:
+        robotState = State.green_line_follow
+
+#def challenge2():
+
+def challenge3():
+    global speed
+    global angle
+    global cur_state, FRONT_LEFT_WINDOW, FRONT_RIGHT_WINDOW, depth_image, color_image
+
+    
+
+    scan = rc.lidar.get_samples()
+    _, fr_dist = rc_utils.get_lidar_closest_point(scan, FRONT_RIGHT_WINDOW)
+    _, fl_dist = rc_utils.get_lidar_closest_point(scan, FRONT_LEFT_WINDOW)
+
+    markers = rc_utils.get_ar_markers(color_image)
+
+
+    if cur_state == Challenge3State.see_marker:
+        if len(markers) > 0 and rc_utils.get_pixel_average_distance(depth_image, markers[0].get_corners()[0], 11) < 120 and markers[0].get_orientation().value != 0:
+            cur_state = Challenge3State.follow_marker
+        else:
+            if fr_dist > 150:
+                angle = 0.4
+            elif fl_dist > 150:
+                angle = -0.4
+            else:
+                angle = 0
+
+    elif cur_state == Challenge3State.follow_marker:
+        if len(markers) > 0:
+            if markers[0].get_orientation().value == 1:
+                angle = -0.75
+            elif markers[0].get_orientation().value == 3:
+                angle = 0.75
+        else:
+            cur_state = Challenge3State.search
+
+    elif cur_state == Challenge3State.search:
+        if len(markers) > 0:
+            cur_state = Challenge3State.see_marker
+        else:
+            if fr_dist > 120 or fl_dist < 45:
+                angle = 0.7
+            elif fl_dist > 120 or fr_dist < 45:
+                angle = -0.7
+            else:
+                angle = 0
+    
+    if contour_center is not None and timer > 5.0:
+        robotState = State.green_line_follow
+
+def challenge4(ar_color):
+    global speed, angle, timer, scan, contour_center, robotState
+    _, front_dis = rc_utils.get_lidar_closest_point(scan, (-10, 10))
+    speed = 1
+    angle = 0
+    print(front_dis)
+    print(ar_color)
+
+    if ar_color == "red" and front_dis < 300:
+        speed = 0
+        angle = 0
+    elif ar_color == "blue" and front_dis > 40:
+        speed = 1
+        angle = 0
+    elif ar_color == "blue" and front_dis < 40:
+        speed = 0
+        angle = 0
+    
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
 
