@@ -27,7 +27,7 @@ class State(IntEnum) :
 
 # Color HSV
 CROP_FLOOR = ((300, 0), (rc.camera.get_height(), rc.camera.get_width()))
-
+CROP_FLOOR_2 = (300, rc.camera.get_width()//2), (rc.camera.get_height(), rc.camera.get_width())
 BLUE = ((90, 200, 200), (120, 255, 255), "blue")  
 GREEN = ((40,50,50), (80,255,255), "green")
 RED = ((170,50,50), (10,255,255), "red")
@@ -47,6 +47,7 @@ angle = 0.0  # The current angle of the car's wheels
 right_center = [0,0]
 left_center = [0,0]
 counter = 0
+center = [0,0]
 
 def start():
     rc.drive.stop()
@@ -56,15 +57,22 @@ def challenge9():
     global counter
     global speed
     global angle
+    global center
 
+    image = rc.camera.get_color_image()
+    cropped_image = rc_utils.crop(image, CROP_FLOOR[0], CROP_FLOOR[1])
+
+    contours=rc_cf.get_n_contour_info(1, image, BLUE[0], BLUE[1], CROP_FLOOR)
+    if contours:
+        center = [contours[0][1][0], contours[0][1][1]-150]
+    
+
+    angle = rc_utils.remap_range(center[1],0, rc.camera.get_width(),-1,1, True)
+    rc_utils.draw_circle(cropped_image, center)
 
     speed = 1
-    if counter > 5:
-        angle = 0.15
-    counter+=rc.get_delta_time()
+    rc.display.show_color_image(cropped_image)
 
-    if counter > 9:
-        angle = 0
 
 
 def challenge2(path_color):
@@ -148,8 +156,9 @@ def update():
     speed = rc.controller.get_trigger(rt)-rc.controller.get_trigger(lt)
     angle = rc.controller.get_joystick(rc.controller.Joystick.LEFT)[0]
     
-    challenge2(PURPLE)
-    # rc.drive.set_max_speed(0.75)
+    # challenge2(PURPLE)
+    challenge9()
+    rc.drive.set_max_speed(0.75)
     rc.drive.set_speed_angle(speed, angle)
 
     if rc.controller.is_down(rc.controller.Button.B):
