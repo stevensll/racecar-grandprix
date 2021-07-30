@@ -58,8 +58,6 @@ color_image = None
 marker = None
 
 #Challenge 2
-right_center = [0,0]
-left_center = [0,0]
 counter = 0
 center = [0,0]
 hard = False
@@ -185,16 +183,15 @@ def green_line_follow():
     global contour_center,angle,speed, color_image, image, green_contours
     CROP_FLOOR = ((360, 0), (rc.camera.get_height(), rc.camera.get_width()))
     if contour_center is not None:
-        #error = contour_center[1] - rc.camera.get_width() / 2
-        #angle = 2 * error/rc.camera.get_width()
 
         angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
 
-        max_speed = 0.6
-        min_speed = 0.2
-        speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
-
-        speed = rc_utils.clamp(speed, -0.5, 0.6)
+        if timer < 10:
+            speed = 0.3
+        else:
+            max_speed = 0.6
+            min_speed = 0.2
+            speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
 
 def challenge1():
     global scan, green_contours, image, robotState, marker, speed, angle, timer, contour_center
@@ -219,7 +216,7 @@ def challenge1():
 
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
-
+        timer = 0.0
 def challenge2(path_color):
     global speed, angle
     global PURPLE, ORANGE
@@ -269,7 +266,7 @@ def challenge2(path_color):
     
     if hard:
         angle = 0
-        print(angle,counter)
+        # print(angle,counter)
         speed = 0.45
         counter+=rc.get_delta_time()
         if counter > 1.25:
@@ -281,7 +278,7 @@ def challenge2(path_color):
         if counter > 5:
             angle = 0
             robotState = State.green_line_follow
-    
+            timer = 0.0
     
 def challenge3():
     global speed, angle
@@ -327,7 +324,7 @@ def challenge3():
     
     if contour_center is not None and timer > 2.0:
         robotState = State.green_line_follow
-
+        timer = 0.0
 def challenge4(ar_color):
     global speed, angle, timer, scan, contour_center, robotState
     _, front_dis = rc_utils.get_lidar_closest_point(scan, (-10, 10))
@@ -348,7 +345,7 @@ def challenge4(ar_color):
     
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
-
+        timer = 0.0
 def challenge6():
     global speed, angle, timer, detected_obstacle, detected_obstacle_time, scan, FRONT_WINDOW, forward_dist
     forward_dist = rc_utils.get_lidar_average_distance(scan, 0.0, 30.0)
