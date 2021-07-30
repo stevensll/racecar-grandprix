@@ -187,7 +187,7 @@ def update():
             elif id == 5 and ar_dis < 60:
                 robotState = State.green_line_follow
                 timer = 0
-            elif id == 8 and ar_dis < 60:
+            elif id == 8 and ar_dis < 80:
                 robotState = State.challenge8
                 timer = 0
     # print(forward_dist)
@@ -443,7 +443,7 @@ def challenge8():
 
     update_contour()
     print(contour_area)
-    
+    rc.drive.set_max_speed(0.52)
     speed = 1.0
 
     if blue_contour_center is not None:
@@ -452,7 +452,7 @@ def challenge8():
         else:
             if contour_area > 10000:
                 angle = -0.35
-                rc.drive.set_max_speed(0.75)
+                rc.drive.set_max_speed(1)
             else:
                 angle = 6 * (blue_contour_center[1] - rc.camera.get_width() / 13) / rc.camera.get_width()
                 angle = rc_utils.clamp(angle, -0.32, 0.32)
