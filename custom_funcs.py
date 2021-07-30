@@ -8,7 +8,7 @@ import racecar_utils as rc_utils
 from typing import *
 from enum import IntEnum
 
-def get_contour_info(image, colorStart: Tuple[int,int], colorEnd:Tuple[int,int], CROP_FLOOR, MIN_CONTOUR_AREA = 50):
+def get_contour_info(image, colorStart: Tuple[int,int], colorEnd:Tuple[int,int], CROP_FLOOR, MIN_CONTOUR_AREA = 30):
     """
     Takes in an image, HSV range, and finds the color with the biggest contour area
 
@@ -17,7 +17,7 @@ def get_contour_info(image, colorStart: Tuple[int,int], colorEnd:Tuple[int,int],
         2) The area of the detected contour
         3) The modified image with a draw function appied
     """
-    contour_center = [0,0]
+    contour_center = None
     contour_area = 0
     contour = None
 
