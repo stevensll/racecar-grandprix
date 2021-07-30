@@ -86,6 +86,11 @@ FRONT_WINDOW_6 = (-20, 20)
 detected_obstacle_time = 0.0
 detected_obstacle = False
 forward_dist = None
+train1 = False
+train2 = False
+train3 = False
+Stop = False
+
 
 #Drive Function
 speed = 0.0  # The current speed of the car
@@ -146,10 +151,10 @@ def update():
         challenge3()
     elif robotState == State.challenge4:
         challenge4(ar_color)
-    elif robotState == State.challenge6:
-        challenge6()
     elif robotState == State.challenge5:
         challenge5()
+    elif robotState == State.challenge6:
+        challenge6()
     elif robotState == State.challenge8:
         challenge8()
 
@@ -183,12 +188,11 @@ def update():
                 timer = 0
             elif id == 4 and ar_dis < 70:
                 robotState = State.challenge5
-
-            elif id == 5 and ar_dis < 60:
+            elif id == 5 and ar_dis < 100:
                 robotState = State.green_line_follow
                 timer = 0
             elif id == 8 and ar_dis < 80:
-                robotState = State.challenge8
+                robotState = State.green_line_follow
                 timer = 0
     # print(forward_dist)
     rc.drive.set_speed_angle(speed, angle)
@@ -203,7 +207,7 @@ def green_line_follow():
         if timer < 3:
             speed = 0.3
         else:
-            max_speed = 0.6
+            max_speed = 0.55
             min_speed = 0.2
             speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
 
@@ -377,25 +381,47 @@ def challenge5():
         print(speed)
 
 def challenge6():
-    global speed, angle, timer, detected_obstacle, detected_obstacle_time, scan, FRONT_WINDOW, forward_dist
-    forward_dist = rc_utils.get_lidar_average_distance(scan, 0.0, 30.0)
-    print(forward_dist)
+    global speed, angle, timer, detected_obstacle, detected_obstacle_time, scan, FRONT_WINDOW, forward_dist,color_image
+    global train1, train2, train3, Stop
+    global contour_center, robotState
+
     angle = 0
-    speed = 1
 
-    if speed > 0 and forward_dist < 160:
-        if not detected_obstacle:
-            detected_obstacle = True
-            detected_obstacle_time = timer
-        if timer - detected_obstacle_time < 0.5:
-            speed = -1
-        else:
-            speed = 0
-    elif forward_dist > 160:
+    right_dist = rc_utils.get_lidar_average_distance(scan, 30.0, 5.0)
+    left_dist = rc_utils.get_lidar_average_distance(scan, -30.0, 5.0)
+    forward_dist = left_dist+right_dist
+    print(left_dist, right_dist)
+    speed = 0.35
+
+    # TriggerLeft = rc.controller.Trigger.LEFT
+    # TriggerRight = rc.controller.Trigger.RIGHT
+    
+    # speed = rc.controller.get_trigger(TriggerRight)-rc.controller.get_trigger(TriggerLeft)
+    if forward_dist > 400:
         speed = 1
-        detected_obstacle = False
-        detected_obstacle_time = 0.0
-
+    else:
+        speed = 0
+        
+    # if not (train1 and train2 and train3):
+    #     speed = .75
+    # if Stop:
+    # #     speed = -1
+    # if speed > 0 and forward_dist < 160:
+    #     if not detected_obstacle:
+    #         detected_obstacle = True
+    #         detected_obstacle_time = timer
+    #     if timer - detected_obstacle_time < 0.2:
+    #         speed = -1
+    #     else:
+    #         speed = 0
+    # elif forward_dist > 160:
+    #     speed = 1
+    #     detected_obstacle = False
+    #     detected_obstacle_time = 0.0
+    # timer+=rc.get_delta_time()
+    # if contour_center is not None:
+    #     robotState = State.green_line_follow
+    #     timer = 0.0
 def update_contour():
     """
     Finds contours in the current color image and uses them to update contour_center
