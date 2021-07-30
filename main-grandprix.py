@@ -95,17 +95,19 @@ Stop = False
 #Drive Function
 speed = 0.0  # The current speed of the car
 angle = 0.0  # The current angle of the car's wheels
-
+le_max = 0.9
 def start():
-    global robotState
+    global robotState,timer
     rc.drive.set_max_speed(0.5)
     rc.drive.stop()
+    timer = 5
     robotState = State.green_line_follow
+    speed = le_max
 
     print("Team Cocacola Grand Prix Challenge!")
 
 def update():
-    global speed, angle, robotState, scan, color_image, timer, depth_image, marker, contour_center, ar_color, green_contours
+    global speed, angle, robotState, scan, color_image, timer, depth_image, marker, contour_center, ar_color, green_contours, le_max
     timer += rc.get_delta_time()
     color_image = rc.camera.get_color_image()
     depth_image = rc.camera.get_depth_image()
@@ -141,7 +143,7 @@ def update():
     
 
     if robotState == State.green_line_follow:
-        green_line_follow()
+        green_line_follow(le_max)
     if robotState == State.challenge1:
         challenge1() 
     elif robotState ==State.challenge2:
@@ -154,9 +156,9 @@ def update():
     elif robotState == State.challenge5:
         challenge5()
     elif robotState == State.challenge6:
-        challenge6()
+        challenge6_new()
     elif robotState == State.challenge8:
-        challenge8()
+        challenge8_new()
 
     for marker in markers:
         id = marker.get_id()
@@ -183,33 +185,41 @@ def update():
                 robotState = State.challenge4
                 ar_color = color
                 timer = 0
-            elif id == 199 and ar_dis < 200:
+            elif id == 199 and ar_dis < 220:
                 robotState = State.challenge3
                 timer = 0
             elif id == 4 and ar_dis < 70:
                 robotState = State.challenge5
             elif id == 5 and ar_dis < 100:
                 robotState = State.green_line_follow
-                timer = 0
-            elif id == 8 and ar_dis < 80:
-                robotState = State.green_line_follow
-                timer = 0
-    # print(forward_dist)
+                le_max = 1
+                timer = 5
+            elif id == 6 and ar_dis < 120:
+                robotState = State.challenge6
+                timer = 5
+                le_max = 0.7
+            elif id == 8 and ar_dis < 150:
+                robotState = State.challenge8
+                le_max = 0.7
+                timer = 5
+    print(f"Max{le_max} Speed{speed}")
     rc.drive.set_speed_angle(speed, angle)
 
 
-def green_line_follow():
+def green_line_follow(max):
     global contour_center,angle,speed, color_image, image, green_contours
     CROP_FLOOR = ((360, 0), (rc.camera.get_height(), rc.camera.get_width()))
     if contour_center is not None:
 
         angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
-        if timer < 3:
+        if timer < 4.5:
             speed = 0.3
         else:
-            max_speed = 0.55
-            min_speed = 0.2
+            max_speed = max
+            min_speed = 0.5
             speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
+            speed = rc_utils.clamp(speed, min_speed, max_speed)
+
 
 def challenge1():
     global scan, green_contours, image, robotState, marker, speed, angle, timer, contour_center
@@ -234,6 +244,7 @@ def challenge1():
 
     if contour_center is not None and timer > 5.0:
         robotState = State.green_line_follow
+        le_max = 0.5
         timer = 0.0
 
 def challenge2(path_color):
@@ -242,6 +253,7 @@ def challenge2(path_color):
     global counter  
     global hard
     global robotState
+    global le_max
 
     CROP_FLOOR = ((300, rc.camera.get_width()//2 ), (rc.camera.get_height(),rc.camera.get_width()))
     MULTIPLIER = 4
@@ -298,6 +310,7 @@ def challenge2(path_color):
             angle = 0
             robotState = State.green_line_follow
             timer = 0.0
+            le_max = 0.7
     
 def challenge3():
     global speed, angle
@@ -343,12 +356,13 @@ def challenge3():
     
     if contour_center is not None and timer > 2.0:
         robotState = State.green_line_follow
+        le_max = 0.9
         timer = 0.0
 
 def challenge4(ar_color):
     global speed, angle, timer, scan, contour_center, robotState
     _, front_dis = rc_utils.get_lidar_closest_point(scan, (-10, 10))
-    speed = 0.5
+    speed = 1
     angle = 0
     print(front_dis)
     print(ar_color)
@@ -357,28 +371,56 @@ def challenge4(ar_color):
         speed = 0
         angle = 0
     elif ar_color == "blue" and front_dis > 40:
-        speed = 0.5
+        speed = 0.7
         angle = 0
     elif ar_color == "blue" and front_dis < 40:
         speed = 0
         angle = 0
     
     if contour_center is not None and timer > 5.0:
+        le_max = 0.7
         robotState = State.green_line_follow
         timer = 0.0
 
 def challenge5():
-    global contour_center,angle,speed, color_image, image, green_contours, color_image, depth_image
+    global contour_center,angle,speed, color_image, image, green_contours, color_image, depth_image,timer
     CROP_FLOOR = ((360, 0), (rc.camera.get_height(), rc.camera.get_width()))
     if contour_center is not None:
 
         angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
-        angle = rc_utils.remap_range(contour_center[1], 0, rc.camera.get_width(), -1, 1)
-        max_speed = 0.4
-        min_speed = 0.2
+
+        max_speed = 0.5
+        min_speed = 0.4
         speed = math.cos(0.5 * math.pi * angle) * max_speed + min_speed
-        speed = rc_utils.clamp(speed, -0.5, 0.5)
-        print(speed)
+        speed = rc_utils.clamp(speed, min_speed, max_speed)
+        if 25 < timer < 35:
+            speed = 0.8
+            print(timer)
+
+def update_slow():
+    global robotState
+    print(robotState)    
+
+def challenge6_new():
+    global speed, angle, timer
+    global le_max
+    green_line_follow(le_max)
+    # print(timer)
+    if 25 < timer < 32:
+        le_max = 0.7
+    else:
+        le_max = 1
+def challenge8_new():
+    global speed, angle, timer
+    global le_max
+    green_line_follow(le_max)
+    # print(timer)
+    if timer > 28:
+        le_max = 1
+
+if __name__ == "__main__":
+    rc.set_start_update(start, update, update_slow)
+    rc.go()
 
 def challenge6():
     global speed, angle, timer, detected_obstacle, detected_obstacle_time, scan, FRONT_WINDOW, forward_dist,color_image
@@ -460,7 +502,6 @@ def update_contour():
 
         # Display the image to the screen
         rc.display.show_color_image(image)
-
 def challenge8():
     global blue_contour_center
     global contour_area
@@ -492,11 +533,3 @@ def challenge8():
     return angle
 
 
-def update_slow():
-    global robotState
-    print(robotState)    
-
-
-if __name__ == "__main__":
-    rc.set_start_update(start, update, update_slow)
-    rc.go()
