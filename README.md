@@ -4,7 +4,7 @@ This repository is designed for individuals using the MITLL RACECAR-MN, an educa
 
 **BWSI Racecar Grand Prix - Team Coca Cola**
 
-Alexander Jiang, Steven Lei, Stephen Snekvik, Austin Huang & David Romero
+Alexander Jiang, Steven Lei, Stephen Snekvik & Austin Huang
 
 
 **Special thanks to the instructors:**
